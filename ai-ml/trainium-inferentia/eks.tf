@@ -120,6 +120,7 @@ module "eks" {
       labels = {
         WorkerType    = "ON_DEMAND"
         NodeGroupType = "core"
+        workload = "rayhead"
       }
 
       tags = merge(local.tags, {
@@ -486,6 +487,55 @@ module "eks" {
     #--------------------------------------------------
     # Inferentia2 Spot node group
     #--------------------------------------------------
+    inf2-8xl-ng = {
+      name        = "inf2-8xl-ng"
+      description = "inf2 8xl node group for ML inference workloads"
+      # The code filters the private subnets based on their CIDR blocks and selects the subnet ID if the CIDR block starts with "100." Otherwise, it assigns a null value.
+      # The element(compact([...]), 0) expression ensures that only the first non-null value is included in the resulting list of subnet IDs.
+      subnet_ids = [element(compact([for subnet_id, cidr_block in zipmap(module.vpc.private_subnets, module.vpc.private_subnets_cidr_blocks) :
+        substr(cidr_block, 0, 4) == "100." ? subnet_id : null]), 0)
+      ]
+
+      # aws ssm get-parameters --names /aws/service/eks/optimized-ami/1.27/amazon-linux-2-gpu/recommended/image_id --region us-west-2
+      # ami_id   = "ami-0e0deb7ae582f6fe9" # Use this to pass custom AMI ID and ignore ami_type
+      ami_type       = "AL2_x86_64_GPU"
+      //capacity_type  = "SPOT"
+      capacity_type = var.inf2_capacity_type
+      instance_types = ["inf2.8xlarge"]
+
+      pre_bootstrap_user_data = <<-EOT
+        # Install Neuron monitoring tools
+        yum install aws-neuronx-tools-2.* -y
+        export PATH=/opt/aws/neuron/bin:$PATH
+      EOT
+
+      min_size     = var.inf2_8xl_min_size
+      max_size     = var.inf2_8xl_max_size
+      desired_size = var.inf2_8xl_desired_size
+
+      labels = {
+        instance-type = "inf2-8xl"
+        //provisioner   = "cluster-autoscaler"
+      }
+
+      taints = [
+        {
+          key    = "aws.amazon.com/neuron",
+          value  = "true",
+          effect = "NO_SCHEDULE"
+        },
+        {
+          key    = "aws.amazon.com/neuroncore",
+          value  = "true",
+          effect = "NO_SCHEDULE"
+        },
+      ]
+
+      tags = merge(local.tags, {
+        Name                     = "inf2-xl-ng",
+        "karpenter.sh/discovery" = local.name
+      })
+    }
     inf2-24xl-ng = {
       name        = "inf2-24xl-ng"
       description = "inf2 24xl node group for ML inference workloads"
@@ -498,7 +548,7 @@ module "eks" {
       # aws ssm get-parameters --names /aws/service/eks/optimized-ami/1.27/amazon-linux-2-gpu/recommended/image_id --region us-west-2
       # ami_id   = "ami-0e0deb7ae582f6fe9" # Use this to pass custom AMI ID and ignore ami_type
       ami_type       = "AL2_x86_64_GPU"
-      capacity_type  = "SPOT"
+      capacity_type  = var.inf2_capacity_type
       instance_types = ["inf2.24xlarge"]
 
       pre_bootstrap_user_data = <<-EOT
@@ -507,30 +557,31 @@ module "eks" {
         export PATH=/opt/aws/neuron/bin:$PATH
       EOT
 
-      min_size     = 0
-      max_size     = 2
-      desired_size = 0
+      min_size     = var.inf2_24xl_min_size
+      max_size     = var.inf2_24xl_max_size
+      desired_size = var.inf2_24xl_desired_size
 
       labels = {
-        instance-type = "inf2"
-        provisioner   = "cluster-autoscaler"
+        instance-type = "inf2-24xl"
+        //provisioner   = "cluster-autoscaler"
+        workload = "rayworker"
       }
 
       taints = [
         {
           key    = "aws.amazon.com/neuron",
-          value  = true,
+          value  = "true",
           effect = "NO_SCHEDULE"
         },
         {
           key    = "aws.amazon.com/neuroncore",
-          value  = true,
+          value  = "true",
           effect = "NO_SCHEDULE"
         },
       ]
 
       tags = merge(local.tags, {
-        Name                     = "inf2-ng1",
+        Name                     = "inf2-24xl-ng",
         "karpenter.sh/discovery" = local.name
       })
     }
