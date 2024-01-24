@@ -499,8 +499,7 @@ module "eks" {
       # aws ssm get-parameters --names /aws/service/eks/optimized-ami/1.27/amazon-linux-2-gpu/recommended/image_id --region us-west-2
       # ami_id   = "ami-0e0deb7ae582f6fe9" # Use this to pass custom AMI ID and ignore ami_type
       ami_type       = "AL2_x86_64_GPU"
-      //capacity_type  = "SPOT"
-      capacity_type = var.inf2_capacity_type
+      capacity_type  = "SPOT"
       instance_types = ["inf2.8xlarge"]
 
       pre_bootstrap_user_data = <<-EOT
@@ -510,12 +509,12 @@ module "eks" {
       EOT
 
       min_size     = var.inf2_8xl_min_size
-      max_size     = var.inf2_8xl_max_size
+      max_size     = 2
       desired_size = var.inf2_8xl_desired_size
 
       labels = {
         instance-type = "inf2-8xl"
-        //provisioner   = "cluster-autoscaler"
+        provisioner   = "cluster-autoscaler"
       }
 
       taints = [
@@ -558,12 +557,12 @@ module "eks" {
       EOT
 
       min_size     = var.inf2_24xl_min_size
-      max_size     = var.inf2_24xl_max_size
+      max_size     = 2
       desired_size = var.inf2_24xl_desired_size
 
       labels = {
         instance-type = "inf2-24xl"
-        //provisioner   = "cluster-autoscaler"
+        provisioner   = "cluster-autoscaler"
         workload = "rayworker"
       }
 

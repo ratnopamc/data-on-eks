@@ -74,6 +74,20 @@ variable "inf2_capacity_type" {
   default = "ON_DEMAND" // change to "SPOT" after testing
 }
 
+
+variable "inf2_8xl_min_size" {
+  description = "Worker node minimum size"
+  type = number
+  default = 0
+}
+
+variable "inf2_8xl_desired_size" {
+  description = "Worker node desired size"
+  type = number
+  default = 0
+}
+
+
 variable "inf2_24xl_min_size" {
   description = "Inf2-24xl Worker node minimum size"
   type = number
