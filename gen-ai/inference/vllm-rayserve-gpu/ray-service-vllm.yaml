@@ -143,6 +143,9 @@ spec:
                 secretKeyRef:
                   name: hf-token
                   key: hf-token
+          nodeSelector:
+            NodeGroupType: g5-gpu-karpenter
+            type: karpenter
           # Please add the following taints to the GPU node.
           tolerations:
           - key: "nvidia.com/gpu"
