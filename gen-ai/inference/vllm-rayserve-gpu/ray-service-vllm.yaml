@@ -78,12 +78,19 @@ spec:
               name: ray-logs
             resources:
               limits:
-                cpu: 16
-                memory: "32G"
+                cpu: 1
+                memory: "6G"
               requests:
-                cpu: 16
-                memory: "32G"
+                cpu: 1
+                memory: "6G"
             env:
+            - name: RAY_GRAFANA_HOST
+              value: FILLIN
+            - name: RAY_PROMETHEUS_HOST
+              value: >-
+                FILLIN
+            - name: RAY_GRAFANA_IFRAME_HOST
+              value: FILLIN
             - name: VLLM_PORT
               value: "8000"
             - name: LD_LIBRARY_PATH
@@ -131,6 +138,11 @@ spec:
               value: "8000"
             - name: LD_LIBRARY_PATH
               value: "/home/ray/anaconda3/lib:$LD_LIBRARY_PATH"
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: hf-token
           nodeSelector:
             NodeGroupType: g5-gpu-karpenter
             type: karpenter

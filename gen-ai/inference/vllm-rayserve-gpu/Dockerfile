@@ -6,16 +6,13 @@ LABEL maintainer="DoEKS"
 
 # Set environment variables to non-interactive (this prevents some prompts)
 ENV DEBIAN_FRONTEND=non-interactive
-
-# Install vLLM and other dependencies
-RUN pip install vllm==0.4.3
-
-RUN pip install huggingface_hub
+# Set LD_LIBRARY_PATH to include the directory with libpython3.10.so.1.0
+ENV LD_LIBRARY_PATH /home/ray/anaconda3/lib:$LD_LIBRARY_PATH
 
 WORKDIR /app
 
+# Install vLLM and other dependencies
+RUN pip install vllm==0.4.3 huggingface_hub
+
 # Copy the serving script into the container
 COPY vllm_serve.py /app/vllm_serve.py
-
-# Set LD_LIBRARY_PATH to include the directory with libpython3.10.so.1.0
-ENV LD_LIBRARY_PATH /home/ray/anaconda3/lib:$LD_LIBRARY_PATH
