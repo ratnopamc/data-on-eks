@@ -22,7 +22,7 @@ class APIIngress:
         self.handle = mistral_model_handle
 
     # Define a GET endpoint for inference
-    @app.get("/infer")
+    @app.post("/infer")
     async def infer(self, sentence: str):
         # Asynchronously perform inference using the provided sentence and return the result
         result = await self.handle.infer.remote(sentence)

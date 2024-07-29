@@ -255,8 +255,8 @@ module "eks_data_addons" {
 
   oidc_provider_arn = module.eks.oidc_provider_arn
 
-  enable_aws_neuron_device_plugin  = true
-  enable_aws_efa_k8s_device_plugin = true
+  enable_aws_neuron_device_plugin  = false
+  enable_aws_efa_k8s_device_plugin = false
 
   #---------------------------------------
   # Volcano Scheduler for TorchX used in BERT-Large distributed training example
@@ -469,4 +469,11 @@ resource "kubectl_manifest" "mpi_operator" {
   for_each   = var.enable_mpi_operator ? data.kubectl_file_documents.mpi_operator_yaml.manifests : {}
   yaml_body  = each.value
   depends_on = [module.eks.eks_cluster_id]
+}
+
+resource "helm_release" "neuron-plugins" {
+  name             = "neuron-plugins"
+  chart            = "../../../../../neuron-helm-charts/neuron-k8s-artifacts/"
+  timeout          = 360
+  wait             = false
 }

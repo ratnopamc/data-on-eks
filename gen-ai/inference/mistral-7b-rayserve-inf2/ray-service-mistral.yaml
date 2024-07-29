@@ -37,7 +37,8 @@ spec:
           - name: mistral-7b
             autoscaling_config:
               metrics_interval_s: 0.2
-              min_replicas: 2
+              min_replicas: 1
+              initial_replicas: 1
               max_replicas: 12
               look_back_period_s: 2
               downscale_delay_s: 30
@@ -62,11 +63,13 @@ spec:
       rayStartParams:
         dashboard-host: '0.0.0.0'
         num-cpus: "0" # this is to ensure no tasks or actors are scheduled on the head Pod
+        num-gpus: "0"
       template:
         spec:
           containers:
           - name: head
-            image: public.ecr.aws/data-on-eks/ray2.22.0-py310-mistral7b-neuron:latest
+            # image: public.ecr.aws/data-on-eks/ray2.22.0-py310-mistral7b-neuron:latest
+            image: 489829964455.dkr.ecr.us-west-2.amazonaws.com/ray2.22.0-py310-mistral7b-neuron:latest
             imagePullPolicy: Always # Ensure the image is always pulled when updated
             lifecycle:
               preStop:
@@ -110,13 +113,16 @@ spec:
     - groupName: inf2
       replicas: 1
       minReplicas: 1
-      maxReplicas: 5
-      rayStartParams: {}
+      maxReplicas: 6
+      rayStartParams: {resources: "\"{\\\"aws.amazon.com/neuron\\\": 6}\""}
+      # rayStartParams: {}
       template:
         spec:
+          schedulerName: my-scheduler
           containers:
           - name: worker
-            image: public.ecr.aws/data-on-eks/ray2.22.0-py310-mistral7b-neuron:latest
+            # image: public.ecr.aws/data-on-eks/ray2.22.0-py310-mistral7b-neuron:latest
+            image: 489829964455.dkr.ecr.us-west-2.amazonaws.com/ray2.22.0-py310-mistral7b-neuron:latest
             imagePullPolicy: Always # Ensure the image is always pulled when updated
             lifecycle:
               preStop:
@@ -128,10 +134,12 @@ spec:
                 cpu: "90" # All vCPUs of inf2.24xlarge; 6vCPU daemonset overhead
                 memory: "360G" # All memory of inf2.24xlarge; 24G for daemonset overhead
                 aws.amazon.com/neuron: "6" # All Neuron cores of inf2.24xlarge
+                # aws.amazon.com/neuroncore: 12
               requests:
                 cpu: "90" # All vCPUs of inf2.24xlarge; 6vCPU daemonset overhead
                 memory: "360G" # All memory of inf2.24xlarge; 24G for daemonset overhead
                 aws.amazon.com/neuron: "6" # All Neuron cores of inf2.24xlarge
+                # aws.amazon.com/neuroncore: 12
             env:
             - name: LD_LIBRARY_PATH
               value: "/home/ray/anaconda3/lib:$LD_LIBRARY_PATH"
