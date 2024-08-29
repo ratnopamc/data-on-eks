@@ -228,10 +228,14 @@ module "eks_blueprints_addons" {
 }
 
 resource "aws_eks_access_entry" "karpenter_node_access_entry" {
-  cluster_name      = module.eks.cluster_name
-  principal_arn     = module.eks_blueprints_addons.karpenter.node_iam_role_arn
-  kubernetes_groups = []
-  type              = "EC2_LINUX"
+  cluster_name  = module.eks.cluster_name
+  principal_arn = module.eks_blueprints_addons.karpenter.node_iam_role_arn
+  # kubernetes_groups = []
+  type = "EC2_LINUX"
+
+  depends_on = [
+    module.eks_blueprints_addons
+  ]
 }
 
 #---------------------------------------------------------------
@@ -467,21 +471,34 @@ resource "kubectl_manifest" "mpi_operator" {
 
 #---------------------------------------------------------------
 # Neuron Scheduler deployment
+# The YAML manifest contents for Neuron Scheduler will be replaced in future by Neuron Helm Chart
 #---------------------------------------------------------------
-resource "kubectl_manifest" "neuron_scheduler" {
-  yaml_body = templatefile("${path.module}/helm-values/neuron-scheduler.yaml", {
-  })
+# https://awsdocs-neuron.readthedocs-hosted.com/en/latest/_downloads/e739253083129abeaf6f6ad1db7ccb21/my-scheduler.yml
 
-  depends_on = [
-    module.eks_blueprints_addons
-  ]
+data "http" "neuron_scheduler" {
+  url = "https://awsdocs-neuron.readthedocs-hosted.com/en/latest/_downloads/e739253083129abeaf6f6ad1db7ccb21/my-scheduler.yml"
+}
+
+data "kubectl_file_documents" "neuron_scheduler" {
+  content = data.http.neuron_scheduler.response_body
+}
+
+resource "kubectl_manifest" "neuron_scheduler" {
+  for_each   = data.kubectl_file_documents.neuron_scheduler.manifests
+  yaml_body  = each.value
+  depends_on = [module.eks.eks_cluster_id]
+}
+
+data "http" "k8s_neuron_scheduler_eks" {
+  url = "https://awsdocs-neuron.readthedocs-hosted.com/en/latest/_downloads/e518187532701b6660dcd70ea28c2562/k8s-neuron-scheduler-eks.yml"
+}
+
+data "kubectl_file_documents" "k8s_neuron_scheduler_eks" {
+  content = data.http.k8s_neuron_scheduler_eks.response_body
 }
 
 resource "kubectl_manifest" "k8s_neuron_scheduler_eks" {
-  yaml_body = templatefile("${path.module}/helm-values/k8s-neuron-scheduler-eks.yaml", {
-  })
-
-  depends_on = [
-    module.eks_blueprints_addons
-  ]
+  for_each   = data.kubectl_file_documents.k8s_neuron_scheduler_eks.manifests
+  yaml_body  = each.value
+  depends_on = [module.eks.eks_cluster_id]
 }
