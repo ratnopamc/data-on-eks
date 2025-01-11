@@ -12,11 +12,6 @@ import ReplaceS3BucketPlaceholders from './_replace_s3_bucket_placeholders.mdx';
 
 import CodeBlock from '@theme/CodeBlock';
 
-# S3 Tables with Amazon EKS
-
-![s3tables](img/s3tables.png)
-
-
 ## What is S3 Tables?
 
 Amazon S3 Tables is a fully managed tabular data store purpose-built to optimize performance, simplify security, and provide cost-efficient storage for large-scale analytics workloads. It integrates directly with services like Amazon EMR, Amazon Athena, Amazon Redshift, AWS Glue, and AWS Lake Formation, offering a seamless experience for running analytics and machine learning workloads.
@@ -24,6 +19,8 @@ Amazon S3 Tables is a fully managed tabular data store purpose-built to optimize
 ## Why Run S3 Tables on Amazon EKS?
 
 For users who have adopted Amazon EKS for Spark workloads and are using table formats like Iceberg, leveraging S3 Tables offers advantages in performance, cost-efficiency, and security controls. This integration allows organizations to combine Kubernetes-native features with the capabilities of S3 Tables, potentially improving query performance and resource scaling within their existing environment. By following the steps detailed in this document, users can seamlessly integrate S3 Tables into their EKS setup, providing a flexible and complementary solution for analytics workloads.
+
+![s3tables](img/s3tables.png)
 
 ## How S3 Tables Differ from Iceberg Table Format
 
