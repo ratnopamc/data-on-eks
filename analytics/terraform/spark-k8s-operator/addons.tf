@@ -386,6 +386,17 @@ module "eks_data_addons" {
           rbac:
             # -- Specifies whether to create RBAC resources for the controller.
             create: false
+        prometheus:
+          podMonitor:
+            # -- Specifies whether to create pod monitor.
+            # Note that prometheus metrics should be enabled as well.
+            create: true
+            # -- Pod monitor labels
+            labels:
+              release: kube-prometheus-stack
+            # -- The label to use to retrieve the job name from
+            jobLabel: spark-operator-podmonitor
+            # -- Prometheus metrics endpoint properties. `metrics.portName` will be used as a port
       EOT
     ]
   }
