@@ -144,12 +144,20 @@ module "eks_data_addons" {
       name: spark-gpu-karpenter
       clusterName: ${module.eks.cluster_name}
       ec2NodeClass:
+        amiSelectorTerms:
+          - alias: al2023@v20241024
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
           id: ${module.vpc.private_subnets[2]}
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            rootVolume: true
+            ebs:
+              volumeSize: 100Gi
+              volumeType: gp3
         instanceStorePolicy: RAID0
 
       nodePool:
@@ -166,7 +174,7 @@ module "eks_data_addons" {
             values: ["g5"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "2xlarge" ]
+            values: [ "2xlarge", "4xlarge" ]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -177,7 +185,7 @@ module "eks_data_addons" {
           cpu: 1000
         disruption:
           consolidationPolicy: WhenEmpty
-          consolidateAfter: 30s
+          consolidateAfter: Never
           expireAfter: 720h
         weight: 100
       EOT
@@ -189,12 +197,20 @@ module "eks_data_addons" {
       name: spark-driver-cpu-karpenter
       clusterName: ${module.eks.cluster_name}
       ec2NodeClass:
+        amiSelectorTerms:
+          - alias: al2023@v20241024
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
           id: ${module.vpc.private_subnets[3]}
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            rootVolume: true
+            ebs:
+              volumeSize: 100Gi
+              volumeType: gp3
         instanceStorePolicy: RAID0
 
       nodePool:
@@ -218,7 +234,7 @@ module "eks_data_addons" {
           cpu: 1000
         disruption:
           consolidationPolicy: WhenEmpty
-          consolidateAfter: 30s
+          consolidateAfter: Never
           expireAfter: 720h
         weight: 100
       EOT
